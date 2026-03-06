@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="FitnessTakip — Antrenman, beslenme ve vücut ölçümlerinizi takip edin.">
+  <title>FitnessTakip — Fitness Takip Uygulaması</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <!-- NAVBAR -->
+  <nav class="navbar" id="navbar">
+    <div class="navbar-brand">
+      <div class="brand-icon">💪</div><span>FitnessTakip</span>
+    </div>
+    <ul class="navbar-nav" id="navLinks">
+      <li><a href="#dashboard" data-page="dashboard">📊 Dashboard</a></li>
+      <li><a href="#workouts" data-page="workouts">🏋️ Antrenman</a></li>
+      <li><a href="#nutrition" data-page="nutrition">🥗 Beslenme</a></li>
+      <li><a href="#tracking" data-page="tracking">📈 Takip</a></li>
+      <li><a href="#measurements" data-page="measurements">📐 Ölçüm</a></li>
+      <li><a href="#profile" data-page="profile">👤 Profil</a></li>
+      <li><a href="#admin" data-page="admin" id="adminNavLink" class="hidden">🔧 Admin</a></li>
+    </ul>
+    <div class="navbar-actions">
+      <button class="btn-icon-only" id="themeToggle" title="Tema Değiştir">🌙</button>
+      <div class="navbar-user" id="navbarUser">
+        <span id="navUserName" class="text-sm text-muted"></span>
+        <div class="user-avatar" id="userAvatar" title="Çıkış Yap"></div>
+      </div>
+    </div>
+    <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menü">☰</button>
+  </nav>
+
+  <div class="toast-container" id="toastContainer"></div>
+  <main class="main-content" id="app"></main>
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal" id="modalContent"></div>
+  </div>
+
+  <!-- LOGIN -->
+  <template id="tpl-login">
+    <div class="auth-container">
+      <div class="auth-card animate-in">
+        <div class="auth-header">
+          <div class="auth-icon">💪</div>
+          <h1>Hoş Geldiniz</h1>
+          <p>Hesabınıza giriş yapın</p>
+        </div>
+        <form id="loginForm" autocomplete="off">
+          <div class="form-group">
+            <label class="form-label" for="loginUsername">Kullanıcı Adı</label>
+            <input class="form-input" type="text" id="loginUsername" placeholder="Kullanıcı adınız" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="loginPassword">Şifre</label>
+            <input class="form-input" type="password" id="loginPassword" placeholder="••••••••" required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block btn-lg">Giriş Yap</button>
+        </form>
+        <div class="auth-footer">Hesabınız yok mu? <a href="#register">Kayıt Ol</a></div>
+      </div>
+    </div>
+  </template>
+
+  <!-- REGISTER -->
+  <template id="tpl-register">
+    <div class="auth-container">
+      <div class="auth-card animate-in">
+        <div class="auth-header">
+          <div class="auth-icon">🚀</div>
+          <h1>Kayıt Ol</h1>
+          <p>Hemen ücretsiz hesap oluşturun</p>
+        </div>
+        <form id="registerForm" autocomplete="off">
+          <div class="form-group">
+            <label class="form-label" for="regUsername">Kullanıcı Adı</label>
+            <input class="form-input" type="text" id="regUsername" placeholder="Kullanıcı adınız" required
+              minlength="3">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="regEmail">E-posta</label>
+            <input class="form-input" type="email" id="regEmail" placeholder="ornek@email.com" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label" for="regAge">Yaş</label><input class="form-input"
+                type="number" id="regAge" placeholder="25" min="10" max="120" required></div>
+            <div class="form-group"><label class="form-label" for="regGender">Cinsiyet</label>
+              <select class="form-select" id="regGender" required>
+                <option value="">Seçin</option>
+                <option value="male">Erkek</option>
+                <option value="female">Kadın</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="regPassword">Şifre</label>
+            <input class="form-input" type="password" id="regPassword" placeholder="••••••••" required minlength="6">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="regPasswordConfirm">Şifre Tekrar</label>
+            <input class="form-input" type="password" id="regPasswordConfirm" placeholder="••••••••" required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block btn-lg">Kayıt Ol</button>
+        </form>
+        <div class="auth-footer">Zaten hesabınız var mı? <a href="#login">Giriş Yap</a></div>
+      </div>
+    </div>
+  </template>
+
+  <!-- DASHBOARD -->
+  <template id="tpl-dashboard">
+    <div class="animate-in">
+      <div class="page-header">
+        <h1><span class="icon">📊</span> Dashboard</h1>
+        <p class="text-muted" id="dashGreeting"></p>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card animate-in animate-in-delay-1" onclick="location.hash='#workouts'">
+          <div class="card-icon green">🏋️</div>
+          <div>
+            <div class="stat-value" id="statWorkouts">0</div>
+            <div class="stat-label">Antrenman Planı</div>
+          </div>
+        </div>
+        <div class="stat-card animate-in animate-in-delay-2" onclick="location.hash='#nutrition'">
+          <div class="card-icon blue">🥗</div>
+          <div>
+            <div class="stat-value" id="statMeals">0</div>
+            <div class="stat-label">Bugünkü Öğün</div>
+          </div>
+        </div>
+        <div class="stat-card animate-in animate-in-delay-3" onclick="location.hash='#nutrition'">
+          <div class="card-icon purple">🔥</div>
+          <div>
+            <div class="stat-value" id="statCalories">0</div>
+            <div class="stat-label">Bugünkü Kalori</div>
+          </div>
+        </div>
+        <div class="stat-card animate-in animate-in-delay-4" onclick="location.hash='#tracking'">
+          <div class="card-icon cyan">💧</div>
+          <div>
+            <div class="stat-value" id="statWater">0</div>
+            <div class="stat-label">Su (bardak)</div>
+          </div>
+        </div>
+        <div class="stat-card animate-in animate-in-delay-4" onclick="location.hash='#tracking'">
+          <div class="card-icon indigo">🌙</div>
+          <div>
+            <div class="stat-value" id="statSleep">—</div>
+            <div class="stat-label">Uyku (saat)</div>
+          </div>
+        </div>
+        <div class="stat-card animate-in animate-in-delay-4" onclick="location.hash='#measurements'">
+          <div class="card-icon orange">⚖️</div>
+          <div>
+            <div class="stat-value" id="statBMI">—</div>
+            <div class="stat-label">Son BMI</div>
+          </div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card animate-in animate-in-delay-2">
+          <div class="card-header">
+            <h3 class="card-title">Son Antrenmanlar</h3><a href="#workouts" class="btn btn-ghost btn-sm">Tümü →</a>
+          </div>
+          <div id="dashRecentWorkouts"></div>
+        </div>
+        <div class="card animate-in animate-in-delay-3">
+          <div class="card-header">
+            <h3 class="card-title">Bugünkü Beslenme</h3><a href="#nutrition" class="btn btn-ghost btn-sm">Düzenle →</a>
+          </div>
+          <div id="dashRecentMeals"></div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <!-- WORKOUTS -->
+  <template id="tpl-workouts">
+    <div class="animate-in">
+      <div class="page-header">
+        <h1><span class="icon">🏋️</span> Antrenman Planları</h1>
+        <div class="page-header-actions">
+          <button class="btn btn-secondary" id="btnWorkoutTimer">⏱️ Zamanlayıcı</button>
+          <button class="btn btn-primary" id="btnNewWorkout">+ Yeni Plan</button>
+        </div>
+      </div>
+      <div id="workoutList"></div>
+      <div class="card mt-24">
+        <div class="card-header">
+          <h3 class="card-title">🗒️ Antrenman Geçmişi</h3>
+        </div>
+        <div id="workoutLogList"></div>
+      </div>
+    </div>
+  </template>
+
+  <!-- NUTRITION -->
+  <template id="tpl-nutrition">
+    <div class="animate-in">
+      <div class="page-header">
+        <h1><span class="icon">🥗</span> Beslenme Planı</h1><button class="btn btn-primary" id="btnNewMeal">+ Öğün
+          Ekle</button>
+      </div>
+      <div class="date-nav">
+        <button class="btn btn-secondary btn-icon" id="btnPrevDay">◀</button>
+        <div class="date-display" id="nutritionDate"></div>
+        <button class="btn btn-secondary btn-icon" id="btnNextDay">▶</button>
+      </div>
+      <div id="nutritionContent"></div>
+    </div>
+  </template>
+
+  <!-- TRACKING (Su + Şeker + Uyku) -->
+  <template id="tpl-tracking">
+    <div class="animate-in">
+      <div class="page-header">
+        <h1><span class="icon">📈</span> Takip</h1>
+      </div>
+      <div class="sub-tabs" id="trackingTabs">
+        <button class="sub-tab active" data-tab="water">💧 Su Takibi</button>
+        <button class="sub-tab" data-tab="sugar">🍬 Şeker Takibi</button>
+        <button class="sub-tab" data-tab="sleep">🌙 Uyku Takibi</button>
+      </div>
+
+      <!-- Su Tab -->
+      <div class="tab-content active" id="tab-water">
+        <div class="grid-2">
+          <div class="card">
+            <h3 class="card-title mb-24">Bugünkü Su Tüketimi</h3>
+            <div class="water-tracker">
+              <div class="water-visual">
+                <div class="water-bottle">
+                  <div class="water-fill" id="waterFill"></div>
+                </div>
+                <div class="water-info">
+                  <div class="water-count" id="waterCount">0</div>
+                  <div class="water-label">/ <span id="waterGoalDisplay">8</span> bardak</div>
+                </div>
+              </div>
+              <div class="water-buttons">
+                <button class="btn btn-primary btn-lg" id="btnAddWater">💧 + 1 Bardak</button>
+                <button class="btn btn-secondary" id="btnRemoveWater">− 1 Bardak</button>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <h3 class="card-title mb-24">Son 7 Gün</h3>
+            <div class="chart-container" id="waterChartArea"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Şeker Tab -->
+      <div class="tab-content" id="tab-sugar">
+        <div class="grid-2">
+          <div class="card">
+            <h3 class="card-title mb-24">Bugünkü Şeker Tüketimi</h3>
+            <form id="sugarForm">
+              <div class="form-group"><label class="form-label">Şeker Miktarı (g)</label><input class="form-input"
+                  type="number" id="sugarAmount" placeholder="25" min="0" step="0.1"></div>
+              <div class="form-group"><label class="form-label">Not</label><input class="form-input" type="text"
+                  id="sugarNote" placeholder="örn: Çay, tatlı..."></div>
+              <button type="submit" class="btn btn-primary btn-block">+ Şeker Kaydı Ekle</button>
+            </form>
+            <div class="mt-16">
+              <div class="sugar-today-total">Bugünkü Toplam: <strong id="sugarTodayTotal">0g</strong></div>
+            </div>
+          </div>
+          <div class="card">
+            <h3 class="card-title mb-24">Son 7 Gün</h3>
+            <div class="chart-container" id="sugarChartArea"></div>
+            <div class="mt-16" id="sugarLogList"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Uyku Tab -->
+      <div class="tab-content" id="tab-sleep">
+        <div class="grid-2">
+          <div class="card">
+            <h3 class="card-title mb-24">Uyku Kaydı Ekle</h3>
+            <form id="sleepForm">
+              <div class="form-group"><label class="form-label">Uyku Süresi (saat)</label><input class="form-input"
+                  type="number" id="sleepHours" placeholder="7.5" min="0" max="24" step="0.5" required></div>
+              <div class="form-group"><label class="form-label">Uyku Kalitesi</label>
+                <div class="sleep-quality" id="sleepQuality">
+                  <span class="sleep-star" data-val="1">⭐</span><span class="sleep-star" data-val="2">⭐</span><span
+                    class="sleep-star" data-val="3">⭐</span><span class="sleep-star" data-val="4">⭐</span><span
+                    class="sleep-star" data-val="5">⭐</span>
+                </div>
+              </div>
+              <div class="form-group"><label class="form-label">Not</label><input class="form-input" type="text"
+                  id="sleepNote" placeholder="İyi uyudum, erken kalktım..."></div>
+              <button type="submit" class="btn btn-primary btn-block">Uyku Kaydı Ekle</button>
+            </form>
+          </div>
+          <div class="card">
+            <h3 class="card-title mb-24">Son 7 Gün</h3>
+            <div class="chart-container" id="sleepChartArea"></div>
+          </div>
+        </div>
+        <div class="card mt-24">
+          <div class="card-header">
+            <h3 class="card-title">Uyku Geçmişi</h3>
+          </div>
+          <div id="sleepHistory"></div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <!-- MEASUREMENTS (BMI + BMR) -->
+  <template id="tpl-measurements">
+    <div class="animate-in">
+      <div class="page-header">
+        <h1><span class="icon">📐</span> Ölçüm</h1>
+      </div>
+      <div class="sub-tabs" id="measurementTabs">
+        <button class="sub-tab active" data-tab="bmi">⚖️ BMI (Vücut Kitle İndeksi)</button>
+        <button class="sub-tab" data-tab="bmr">🔥 BMR (Bazal Metabolizma)</button>
+      </div>
+
+      <!-- BMI Tab -->
+      <div class="tab-content active" id="tab-bmi">
+        <div class="grid-2">
+          <div class="card">
+            <h3 class="card-title mb-24">BMI Hesapla</h3>
+            <form id="bmiForm">
+              <div class="form-row">
+                <div class="form-group"><label class="form-label" for="bmiHeight">Boy (cm)</label><input
+                    class="form-input" type="number" id="bmiHeight" placeholder="175" min="100" max="250" required>
+                </div>
+                <div class="form-group"><label class="form-label" for="bmiWeight">Kilo (kg)</label><input
+                    class="form-input" type="number" id="bmiWeight" placeholder="70" min="20" max="300" step="0.1"
+                    required></div>
+              </div>
+              <div class="form-row">
+                <div class="form-group"><label class="form-label" for="bmiAge">Yaş</label><input class="form-input"
+                    type="number" id="bmiAge" placeholder="25" min="10" max="120" required></div>
+                <div class="form-group"><label class="form-label" for="bmiGender">Cinsiyet</label>
+                  <select class="form-select" id="bmiGender" required>
+                    <option value="">Seçin</option>
+                    <option value="male">Erkek</option>
+                    <option value="female">Kadın</option>
+                  </select>
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary btn-block btn-lg">Hesapla</button>
+            </form>
+          </div>
+          <div class="card">
+            <h3 class="card-title mb-24">Sonuç</h3>
+            <div id="bmiResultArea">
+              <div class="empty-state">
+                <div class="empty-icon">📐</div>
+                <p>Boy ve kilo bilgilerinizi girerek BMI değerinizi öğrenin.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card mt-24">
+          <div class="card-header">
+            <h3 class="card-title">BMI Geçmişi</h3>
+          </div>
+          <div id="bmiHistory"></div>
+        </div>
+      </div>
+
+      <!-- BMR Tab -->
+      <div class="tab-content" id="tab-bmr">
+        <div class="grid-2">
+          <div class="card">
+            <h3 class="card-title mb-24">BMR Hesapla</h3>
+            <form id="bmrForm">
+              <div class="form-row">
+                <div class="form-group"><label class="form-label">Boy (cm)</label><input class="form-input"
+                    type="number" id="bmrHeight" placeholder="175" min="100" max="250" required></div>
+                <div class="form-group"><label class="form-label">Kilo (kg)</label><input class="form-input"
+                    type="number" id="bmrWeight" placeholder="70" min="20" max="300" step="0.1" required></div>
+              </div>
+              <div class="form-row">
+                <div class="form-group"><label class="form-label">Yaş</label><input class="form-input" type="number"
+                    id="bmrAge" placeholder="25" min="10" max="120" required></div>
+                <div class="form-group"><label class="form-label">Cinsiyet</label>
+                  <select class="form-select" id="bmrGender" required>
+                    <option value="">Seçin</option>
+                    <option value="male">Erkek</option>
+                    <option value="female">Kadın</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group"><label class="form-label">Aktivite Seviyesi</label>
+                <select class="form-select" id="bmrActivity" required>
+                  <option value="1.2">Hareketsiz (masa başı)</option>
+                  <option value="1.375">Az Aktif (haftada 1-3 gün)</option>
+                  <option value="1.55" selected>Orta Aktif (haftada 3-5 gün)</option>
+                  <option value="1.725">Çok Aktif (haftada 6-7 gün)</option>
+                  <option value="1.9">Aşırı Aktif (günde 2 kez)</option>
+                </select>
+              </div>
+              <button type="submit" class="btn btn-primary btn-block btn-lg">Hesapla</button>
+            </form>
+          </div>
+          <div class="card">
+            <h3 class="card-title mb-24">Sonuç</h3>
+            <div id="bmrResultArea">
+              <div class="empty-state">
+                <div class="empty-icon">🔥</div>
+                <p>Bilgilerinizi girerek günlük kalori ihtiyacınızı hesaplayın.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <!-- PROFILE -->
+  <template id="tpl-profile">
+    <div class="animate-in">
+      <div class="page-header">
+        <h1><span class="icon">👤</span> Profil</h1>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <h3 class="card-title mb-24">Profil Bilgileri</h3>
+          <form id="profileForm">
+            <div class="form-group"><label class="form-label">Kullanıcı Adı</label><input class="form-input" type="text"
+                id="profileUsername" disabled></div>
+            <div class="form-group"><label class="form-label">E-posta</label><input class="form-input" type="email"
+                id="profileEmail"></div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">Yaş</label><input class="form-input" type="number"
+                  id="profileAge" min="10" max="120"></div>
+              <div class="form-group"><label class="form-label">Cinsiyet</label><select class="form-select"
+                  id="profileGender">
+                  <option value="male">Erkek</option>
+                  <option value="female">Kadın</option>
+                </select></div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Profili Güncelle</button>
+          </form>
+        </div>
+        <div class="card">
+          <h3 class="card-title mb-24">Şifre Değiştir</h3>
+          <form id="passwordForm">
+            <div class="form-group"><label class="form-label">Mevcut Şifre</label><input class="form-input"
+                type="password" id="currentPassword" required></div>
+            <div class="form-group"><label class="form-label">Yeni Şifre</label><input class="form-input"
+                type="password" id="newPassword" required minlength="6"></div>
+            <div class="form-group"><label class="form-label">Yeni Şifre Tekrar</label><input class="form-input"
+                type="password" id="newPasswordConfirm" required></div>
+            <button type="submit" class="btn btn-primary btn-block">Şifre Değiştir</button>
+          </form>
+          <hr class="divider">
+          <h3 class="card-title mb-24">Veri Yönetimi</h3>
+          <button class="btn btn-secondary btn-block mb-12" id="btnExportData">📤 Verileri Dışa Aktar</button>
+          <label class="btn btn-secondary btn-block mb-12 text-center" style="cursor:pointer;">📥 Verileri İçe
+            Aktar<input type="file" id="importFileInput" accept=".json" style="display:none;"></label>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <!-- ADMIN -->
+  <template id="tpl-admin">
+    <div class="animate-in">
+      <div class="page-header">
+        <h1><span class="icon">🔧</span> Admin Paneli</h1>
+      </div>
+      <div class="stats-grid mb-24">
+        <div class="stat-card">
+          <div class="card-icon purple">👥</div>
+          <div>
+            <div class="stat-value" id="adminUserCount">0</div>
+            <div class="stat-label">Toplam Kullanıcı</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="card-icon green">🏋️</div>
+          <div>
+            <div class="stat-value" id="adminWorkoutCount">0</div>
+            <div class="stat-label">Toplam Antrenman</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="card-icon blue">🥗</div>
+          <div>
+            <div class="stat-value" id="adminMealCount">0</div>
+            <div class="stat-label">Toplam Öğün</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Kullanıcı Yönetimi</h3>
+        </div>
+        <div class="table-container">
+          <table class="table" id="adminUserTable">
+            <thead>
+              <tr>
+                <th>Kullanıcı</th>
+                <th>E-posta</th>
+                <th>Rol</th>
+                <th>Antrenman</th>
+                <th>Öğün</th>
+                <th>İşlem</th>
+              </tr>
+            </thead>
+            <tbody id="adminUserTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <script src="script.js"></script>
+</body>
+
+</html>
